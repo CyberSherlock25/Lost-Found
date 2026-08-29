@@ -19,7 +19,7 @@ export const ItemDetailsPage: React.FC = () => {
   // Claim Modal
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [proofDescription, setProofDescription] = useState('');
-  const [proofDocumentUrl, setProofDocumentUrl] = useState('');
+  const [proofFile, setProofFile] = useState<File | null>(null);
   const [submittingClaim, setSubmittingClaim] = useState(false);
 
   useEffect(() => {
@@ -41,16 +41,32 @@ export const ItemDetailsPage: React.FC = () => {
     e.preventDefault();
     if (!item) return;
 
+    const isValidProofFile = !proofFile || proofFile.type === 'application/pdf' || proofFile.type.startsWith('image/');
+    if (!isValidProofFile) {
+      toast.error('Please upload a PDF or image file as proof.');
+      return;
+    }
+
     setSubmittingClaim(true);
     try {
-      await api.post('/claims', {
+      const claimResponse = await api.post('/claims', {
         itemId: item.itemId,
         proofDescription,
-        proofDocumentUrl,
       });
+
+      const createdClaim = claimResponse.data.data;
+      if (proofFile) {
+        const formData = new FormData();
+        formData.append('file', proofFile);
+        await api.post(`/claims/${createdClaim.claimId}/proof-document`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+
       toast.success('Ownership claim submitted successfully! Admin will review your claim.');
       setIsClaimModalOpen(false);
-      // Refresh item details
+      setProofDescription('');
+      setProofFile(null);
       api.get(`/items/${id}`).then((res) => setItem(res.data.data));
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to submit claim');
@@ -198,15 +214,17 @@ export const ItemDetailsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-                  Proof Image / Document URL (Optional)
+                  Upload Proof File (PDF or Image, Optional)
                 </label>
                 <input
-                  type="url"
-                  value={proofDocumentUrl}
-                  onChange={(e) => setProofDocumentUrl(e.target.value)}
-                  placeholder="https://example.com/receipt-proof.jpg"
-                  className="w-full px-3 py-2 rounded-xl glass-input text-xs"
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                  className="w-full px-3 py-2 rounded-xl glass-input text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white file:text-xs"
                 />
+                {proofFile && (
+                  <p className="mt-2 text-[10px] text-emerald-400">Selected: {proofFile.name}</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

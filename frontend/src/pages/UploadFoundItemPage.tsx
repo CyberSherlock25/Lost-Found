@@ -11,6 +11,8 @@ export const UploadFoundItemPage: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -23,7 +25,6 @@ export const UploadFoundItemPage: React.FC = () => {
     itemCondition: 'Good',
     dateFound: new Date().toISOString().split('T')[0],
     remarks: 'Handed over to security desk',
-    imageUrls: [''],
   });
 
   useEffect(() => {
@@ -40,10 +41,19 @@ export const UploadFoundItemPage: React.FC = () => {
         ...formData,
         categoryId: Number(formData.categoryId),
         locationId: Number(formData.locationId),
-        imageUrls: formData.imageUrls.filter((url) => url.trim() !== ''),
       };
 
-      await api.post('/items', payload);
+      const itemResponse = await api.post('/items', payload);
+      const createdItem = itemResponse.data.data;
+
+      for (const image of selectedImages) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', image);
+        await api.post(`/items/${createdItem.itemId}/images`, formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+
       toast.success('Found item uploaded & verified successfully!');
       navigate('/items');
     } catch (err: any) {
@@ -145,14 +155,17 @@ export const UploadFoundItemPage: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Photo Image URL</label>
+          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Upload Item Image(s)</label>
           <input
-            type="url"
-            value={formData.imageUrls[0]}
-            onChange={(e) => setFormData({ ...formData, imageUrls: [e.target.value] })}
-            placeholder="https://images.unsplash.com/photo-1627123424574-724758594e93"
-            className="w-full px-4 py-2.5 rounded-xl glass-input text-xs"
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => setSelectedImages(Array.from(e.target.files || []))}
+            className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white file:text-xs"
           />
+          {selectedImages.length > 0 && (
+            <p className="mt-2 text-[10px] text-emerald-400">Selected {selectedImages.length} image(s)</p>
+          )}
         </div>
 
         <div>

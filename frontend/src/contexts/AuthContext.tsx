@@ -17,22 +17,44 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<String | null>(localStorage.getItem('userRole'));
+  const [role, setRole] = useState<string | null>(() => {
+    const savedRole = localStorage.getItem('userRole');
+    return savedRole ? savedRole : null;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
+    const cachedUser = localStorage.getItem('user');
+
+    if (cachedUser) {
+      try {
+        const parsedUser = JSON.parse(cachedUser) as User;
+        setUser(parsedUser);
+        setRole(parsedUser.roleName || localStorage.getItem('userRole'));
+      } catch {
+        localStorage.removeItem('user');
+      }
+    }
+
     if (token) {
       api.get('/profile')
         .then((res) => {
-          setUser(res.data.data);
-          setRole(res.data.data.roleName);
-          localStorage.setItem('userRole', res.data.data.roleName);
+          const profileUser = res.data.data as User;
+          setUser(profileUser);
+          setRole(profileUser.roleName);
+          localStorage.setItem('userRole', profileUser.roleName);
+          localStorage.setItem('user', JSON.stringify(profileUser));
         })
         .catch(() => {
-          localStorage.clear();
-          setUser(null);
-          setRole(null);
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (!refreshToken) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('user');
+            setUser(null);
+            setRole(null);
+          }
         })
         .finally(() => setIsLoading(false));
     } else {
@@ -44,9 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('userRole', data.role);
-    setRole(data.role);
 
-    setUser({
+    const safeUser: User = {
       userId: data.userId,
       firstName: data.firstName,
       lastName: data.lastName,
@@ -56,15 +77,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       roleId: 0,
       roleName: data.role,
       createdAt: '',
-    });
+    };
 
-    api.get('/profile').then((res) => {
-      setUser(res.data.data);
-    });
+    setRole(data.role);
+    setUser(safeUser);
+    localStorage.setItem('user', JSON.stringify(safeUser));
+
+    api.get('/profile')
+      .then((res) => {
+        const profileUser = res.data.data as User;
+        setUser(profileUser);
+        setRole(profileUser.roleName);
+        localStorage.setItem('userRole', profileUser.roleName);
+        localStorage.setItem('user', JSON.stringify(profileUser));
+      })
+      .catch(() => {
+        setUser(safeUser);
+      });
   };
 
   const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
     setUser(null);
     setRole(null);
     toast.success('Logged out successfully');
@@ -72,6 +108,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
+    setRole(updatedUser.roleName);
+    localStorage.setItem('userRole', updatedUser.roleName);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   return (
@@ -79,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         role: role ? String(role) : null,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user || !!localStorage.getItem('accessToken'),
         isLoading,
         login,
         logout,

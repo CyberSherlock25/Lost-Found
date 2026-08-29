@@ -24,25 +24,24 @@ export const StudentDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Banner */}
-      <div className="relative rounded-3xl glass-panel p-8 overflow-hidden border border-indigo-500/20 shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/20 to-violet-500/0 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative rounded-[28px] glass-panel p-8 overflow-hidden border border-sky-500/20 shadow-[0_32px_70px_-34px_rgba(14,165,233,0.38)]">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-500/16 via-cyan-500/0 to-transparent rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-3">
-              <Sparkles className="w-3.5 h-3.5" /> Smart University Lost & Found Portal
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/8 border border-sky-500/20 text-sky-200 text-xs font-bold mb-3">
+              <Sparkles className="w-3.5 h-3.5" /> Campus Recovery Operations
             </div>
             <h1 className="text-3xl font-black text-slate-100 tracking-tight">
               Welcome back, {user?.firstName}!
             </h1>
             <p className="text-xs text-slate-400 mt-1 max-w-xl leading-relaxed">
-              Track your reported lost belongings, manage ownership claim requests, and browse recently turned-in items across campus.
+              Track your reported lost belongings, manage ownership claim requests, and monitor campus item recovery workflows.
             </p>
           </div>
           <div className="flex gap-3">
             <Link
               to="/items/report-lost"
-              className="px-5 py-3 rounded-2xl gradient-btn text-xs font-bold text-white shadow-xl shadow-indigo-500/25 flex items-center gap-2"
+              className="px-5 py-3 rounded-2xl gradient-btn text-xs font-bold text-white flex items-center gap-2"
             >
               <PlusCircle className="w-4 h-4" /> Report Lost Item
             </Link>
@@ -50,7 +49,7 @@ export const StudentDashboardPage: React.FC = () => {
               to="/items"
               className="px-5 py-3 rounded-2xl glass-panel text-xs font-bold text-slate-200 hover:text-white border border-slate-700 flex items-center gap-2"
             >
-              <Search className="w-4 h-4 text-indigo-400" /> Search Items
+              <Search className="w-4 h-4 text-sky-300" /> Search Items
             </Link>
           </div>
         </div>

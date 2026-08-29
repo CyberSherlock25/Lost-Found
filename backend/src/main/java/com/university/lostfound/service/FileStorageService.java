@@ -25,6 +25,8 @@ public class FileStorageService {
     }
 
     public String storeFile(MultipartFile file) {
+        validateFile(file, "image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf");
+
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "file");
         String extension = "";
         int i = originalFilename.lastIndexOf('.');
@@ -46,6 +48,22 @@ public class FileStorageService {
             return "/uploads/" + fileName;
         } catch (IOException ex) {
             throw new RuntimeException("Could not store file " + fileName + ". Please try again!", ex);
+        }
+    }
+
+    public void validateFile(MultipartFile file, String... allowedContentTypes) {
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Please select a valid file to upload.");
+        }
+        if (file.getSize() > 10 * 1024 * 1024) {
+            throw new RuntimeException("File size exceeds the 10MB limit.");
+        }
+
+        String contentType = file.getContentType();
+        boolean allowed = contentType != null && java.util.Arrays.stream(allowedContentTypes)
+                .anyMatch(contentType::equalsIgnoreCase);
+        if (!allowed) {
+            throw new RuntimeException("Unsupported file type. Please upload only images or PDFs.");
         }
     }
 }

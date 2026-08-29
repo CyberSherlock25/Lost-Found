@@ -10,6 +10,7 @@ import com.university.lostfound.mapper.DTOMapper;
 import com.university.lostfound.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +24,7 @@ public class ClaimService {
     private final UserRepository userRepository;
     private final ItemStatusRepository itemStatusRepository;
     private final NotificationService notificationService;
+    private final FileStorageService fileStorageService;
     private final DTOMapper dtoMapper;
 
     public ClaimService(ClaimRepository claimRepository,
@@ -30,12 +32,14 @@ public class ClaimService {
                         UserRepository userRepository,
                         ItemStatusRepository itemStatusRepository,
                         NotificationService notificationService,
+                        FileStorageService fileStorageService,
                         DTOMapper dtoMapper) {
         this.claimRepository = claimRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.itemStatusRepository = itemStatusRepository;
         this.notificationService = notificationService;
+        this.fileStorageService = fileStorageService;
         this.dtoMapper = dtoMapper;
     }
 
@@ -172,7 +176,18 @@ public class ClaimService {
 
     public List<ClaimDTO> getAllClaims() {
         return claimRepository.findAllByOrderByClaimedAtDesc().stream()
+                .filter(claim -> claim.getClaimStatus() == null || claim.getClaimStatus() == ClaimStatus.PENDING || claim.getClaimStatus() == ClaimStatus.UNDER_REVIEW)
                 .map(dtoMapper::toClaimDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ClaimDTO uploadProofDocument(Long claimId, MultipartFile file) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim not found with ID: " + claimId));
+
+        String proofUrl = fileStorageService.storeFile(file);
+        claim.setProofDocumentUrl(proofUrl);
+        return dtoMapper.toClaimDTO(claimRepository.save(claim));
     }
 }

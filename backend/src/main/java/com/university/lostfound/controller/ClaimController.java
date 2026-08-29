@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -65,5 +66,12 @@ public class ClaimController {
                                                                Authentication authentication) {
         ClaimDTO claim = claimService.markCollected(claimId, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Item marked as collected and claim closed", claim));
+    }
+
+    @PostMapping(value = "/{claimId}/proof-document", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<ClaimDTO>> uploadProofDocument(@PathVariable Long claimId,
+                                                                     @RequestParam("file") MultipartFile file) {
+        ClaimDTO claim = claimService.uploadProofDocument(claimId, file);
+        return ResponseEntity.ok(ApiResponse.success("Proof document uploaded successfully", claim));
     }
 }
