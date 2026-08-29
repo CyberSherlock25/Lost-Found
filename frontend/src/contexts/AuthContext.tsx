@@ -46,7 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('userRole', data.role);
     setRole(data.role);
 
-    // Fetch user details
+    setUser({
+      userId: data.userId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      universityId: '',
+      isActive: true,
+      roleId: 0,
+      roleName: data.role,
+      createdAt: '',
+    });
+
     api.get('/profile').then((res) => {
       setUser(res.data.data);
     });

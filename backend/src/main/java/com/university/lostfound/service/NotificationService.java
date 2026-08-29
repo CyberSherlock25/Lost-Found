@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Service
@@ -73,6 +74,9 @@ public class NotificationService {
 
     @Transactional
     public void sendNotification(User sender, User receiver, Long itemId, Long claimId, String title, String message, String typeName) {
+        if (receiver == null) {
+            return;
+        }
         String resolvedTypeName = typeName != null && !typeName.trim().isEmpty() ? typeName.trim() : "GENERAL";
 
         NotificationType type = notificationTypeRepository.findByNotificationName(resolvedTypeName)
@@ -103,5 +107,14 @@ public class NotificationService {
         notification.setIsRead(false);
 
         notificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void sendNotificationToRoles(User sender, Collection<String> roleNames, Long itemId,
+                                        String title, String message, String typeName) {
+        roleNames.stream()
+                .flatMap(roleName -> userRepository.findByRoleRoleNameAndIsActiveTrue(roleName).stream())
+                .distinct()
+                .forEach(receiver -> sendNotification(sender, receiver, itemId, null, title, message, typeName));
     }
 }

@@ -44,14 +44,14 @@ public class ClaimController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_TEACHER')")
     public ResponseEntity<ApiResponse<List<ClaimDTO>>> getAllClaims() {
         List<ClaimDTO> claims = claimService.getAllClaims();
         return ResponseEntity.ok(ApiResponse.success(claims));
     }
 
     @PostMapping("/{claimId}/review")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_TEACHER')")
     public ResponseEntity<ApiResponse<ClaimDTO>> reviewClaim(@PathVariable Long claimId,
                                                              Authentication authentication,
                                                              @Valid @RequestBody ReviewClaimRequest request) {

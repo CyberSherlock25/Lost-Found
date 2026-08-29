@@ -2,7 +2,6 @@ package com.university.lostfound.service;
 
 import com.university.lostfound.dto.*;
 import com.university.lostfound.entity.*;
-import com.university.lostfound.exception.BadRequestException;
 import com.university.lostfound.exception.ResourceNotFoundException;
 import com.university.lostfound.mapper.DTOMapper;
 import com.university.lostfound.repository.*;
@@ -29,6 +28,7 @@ public class ItemService {
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
     private final DTOMapper dtoMapper;
+    private final NotificationService notificationService;
 
     public ItemService(ItemRepository itemRepository,
                        CategoryRepository categoryRepository,
@@ -37,7 +37,8 @@ public class ItemService {
                        ItemStatusRepository itemStatusRepository,
                        UserRepository userRepository,
                        FileStorageService fileStorageService,
-                       DTOMapper dtoMapper) {
+                       DTOMapper dtoMapper,
+                       NotificationService notificationService) {
         this.itemRepository = itemRepository;
         this.categoryRepository = categoryRepository;
         this.locationRepository = locationRepository;
@@ -46,6 +47,7 @@ public class ItemService {
         this.userRepository = userRepository;
         this.fileStorageService = fileStorageService;
         this.dtoMapper = dtoMapper;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -90,6 +92,7 @@ public class ItemService {
             item.setVerifiedBy(user);
         } else {
             item.setIsVerified(false);
+            itemStatusRepository.findByStatusName("UNDER_REVIEW").ifPresent(item::setStatus);
         }
 
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
@@ -104,13 +107,33 @@ public class ItemService {
         }
 
         Item savedItem = itemRepository.save(item);
+        if (!Boolean.TRUE.equals(item.getIsVerified())) {
+            notificationService.sendNotificationToRoles(
+                user,
+                List.of("TEACHER", "ADMIN"),
+                savedItem.getItemId(),
+                "Item Approval Required",
+                "A new " + type.getTypeName().toLowerCase() + " item requires verification: " + item.getTitle(),
+                "ITEM_PENDING_VERIFICATION"
+            );
+        }
         return dtoMapper.toItemDTO(savedItem);
     }
 
     public ItemDTO getItemById(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with ID: " + itemId));
+        if (!Boolean.TRUE.equals(item.getIsActive()) || !Boolean.TRUE.equals(item.getIsVerified())) {
+            throw new ResourceNotFoundException("Item not found with ID: " + itemId);
+        }
         return dtoMapper.toItemDTO(item);
+    }
+
+    public List<ItemDTO> getPendingApprovals() {
+        return itemRepository.findByIsVerifiedFalseAndIsActiveTrueOrderByCreatedAtAsc()
+                .stream()
+                .map(dtoMapper::toItemDTO)
+                .collect(Collectors.toList());
     }
 
     public PagedResponse<ItemDTO> searchItems(
@@ -134,6 +157,7 @@ public class ItemService {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(criteriaBuilder.equal(root.get("isActive"), true));
+            predicates.add(criteriaBuilder.equal(root.get("isVerified"), true));
 
             if (StringUtils.hasText(query)) {
                 String pattern = "%" + query.toLowerCase() + "%";
@@ -210,7 +234,17 @@ public class ItemService {
 
         item.setIsVerified(true);
         item.setVerifiedBy(verifier);
-        return dtoMapper.toItemDTO(itemRepository.save(item));
+        Item verifiedItem = itemRepository.save(item);
+        notificationService.sendNotification(
+            verifier,
+            item.getUploadedBy(),
+            item.getItemId(),
+            null,
+            "Item Verified",
+            "Your item '" + item.getTitle() + "' has been verified and is now publicly visible.",
+            "ITEM_FOUND"
+        );
+        return dtoMapper.toItemDTO(verifiedItem);
     }
 
     @Transactional

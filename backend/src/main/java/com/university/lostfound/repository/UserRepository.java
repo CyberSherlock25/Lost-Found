@@ -1,12 +1,13 @@
 package com.university.lostfound.repository;
 
-import com.university.lostfound.entity.User;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.university.lostfound.entity.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
@@ -15,4 +16,5 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Boolean existsByEmail(String email);
     Boolean existsByUniversityId(String universityId);
     List<User> findByRoleRoleId(Long roleId);
+    List<User> findByRoleRoleNameAndIsActiveTrue(String roleName);
 }

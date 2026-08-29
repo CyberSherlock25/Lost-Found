@@ -1,9 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 
@@ -25,6 +25,8 @@ import { AuditLogsPage } from './pages/AuditLogsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ForbiddenPage } from './pages/ForbiddenPage';
+import { PublicLandingPage } from './pages/PublicLandingPage';
+import { PendingApprovalsPage } from './pages/PendingApprovalsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,13 +36,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const RootRedirect: React.FC = () => {
-  const { role, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (role === 'ADMIN' || role === 'STAFF') return <Navigate to="/dashboard/admin" replace />;
-  return <Navigate to="/dashboard/student" replace />;
-};
 
 export const App: React.FC = () => {
   return (
@@ -69,20 +64,29 @@ export const App: React.FC = () => {
             {/* Error Pages */}
             <Route path="/forbidden" element={<ForbiddenPage />} />
 
-            {/* Protected Enterprise Portal */}
+            {/* The first screen is always a guest-friendly introduction. */}
+            <Route path="/" element={<PublicLandingPage />} />
+
+            {/* Public browsing remains available without authentication. */}
+            <Route element={<AppLayout />}>
+              <Route path="/items" element={<BrowseItemsPage />} />
+              <Route path="/items/:id" element={<ItemDetailsPage />} />
+            </Route>
+
+            {/* Protected enterprise actions and dashboards */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
-                <Route path="/" element={<RootRedirect />} />
                 <Route path="/dashboard/student" element={<StudentDashboardPage />} />
                 <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
 
-                <Route path="/items" element={<BrowseItemsPage />} />
-                <Route path="/items/:id" element={<ItemDetailsPage />} />
                 <Route path="/items/report-lost" element={<UploadLostReportPage />} />
                 <Route path="/items/report-found" element={<UploadFoundItemPage />} />
 
                 <Route path="/my-claims" element={<MyClaimsPage />} />
                 <Route path="/claims" element={<ClaimsManagementPage />} />
+                <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'STAFF', 'TEACHER']} />}>
+                  <Route path="/approvals" element={<PendingApprovalsPage />} />
+                </Route>
 
                 <Route path="/announcements" element={<AnnouncementsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />

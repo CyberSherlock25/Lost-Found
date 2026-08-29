@@ -21,6 +21,8 @@ public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificat
 
     List<Item> findByUploadedByUserIdOrderByCreatedAtDesc(Long userId);
 
+    List<Item> findByIsVerifiedFalseAndIsActiveTrueOrderByCreatedAtAsc();
+
     List<Item> findTop6ByIsActiveTrueOrderByCreatedAtDesc();
 
     @Query("SELECT c.categoryName, COUNT(i) FROM Item i JOIN i.category c GROUP BY c.categoryName")

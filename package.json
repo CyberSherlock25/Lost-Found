@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "lost-and-found-platform",
   "private": true,
   "version": "1.0.0",
@@ -6,5 +6,9 @@
     "dev": "node scripts/dev.js",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "mvn -f backend/pom.xml spring-boot:run"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3"
   }
 }

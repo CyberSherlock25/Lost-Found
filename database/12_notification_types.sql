@@ -27,6 +27,7 @@ INSERT IGNORE INTO notification_types
 VALUES
 
 ('ITEM_FOUND','A matching item has been found'),
+('ITEM_PENDING_VERIFICATION','A lost or found item requires approval'),
 
 ('CLAIM_SUBMITTED','A claim has been submitted'),
 

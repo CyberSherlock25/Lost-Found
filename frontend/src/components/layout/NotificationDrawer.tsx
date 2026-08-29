@@ -3,6 +3,7 @@ import { api } from '../../services/api';
 import { Notification } from '../../types';
 import { Bell, CheckCheck, X, Clock, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface NotificationDrawerProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface NotificationDrawerProps {
 export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, onClose }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const fetchNotifications = () => {
     setLoading(true);
@@ -38,6 +40,18 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       toast.success('All notifications marked as read');
     });
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.isRead) handleMarkAsRead(notification.notificationId);
+    onClose();
+    if (notification.notificationType === 'ITEM_PENDING_VERIFICATION') {
+      navigate('/approvals');
+    } else if (notification.claimId) {
+      navigate('/claims');
+    } else if (notification.itemId) {
+      navigate(`/items/${notification.itemId}`);
+    }
   };
 
   if (!isOpen) return null;
@@ -80,7 +94,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
               notifications.map((n) => (
                 <div
                   key={n.notificationId}
-                  onClick={() => !n.isRead && handleMarkAsRead(n.notificationId)}
+                  onClick={() => handleNotificationClick(n)}
                   className={`p-4 rounded-xl transition border cursor-pointer ${
                     n.isRead
                       ? 'bg-slate-900/40 border-slate-800/60 text-slate-400'

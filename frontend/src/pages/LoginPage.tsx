@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +23,10 @@ export const LoginPage: React.FC = () => {
       toast.success('Logged in successfully');
       
       const role = res.data.data.role;
-      if (role === 'ADMIN' || role === 'STAFF') {
+      const returnPath = (location.state as { from?: string } | null)?.from;
+      if (returnPath) {
+        navigate(returnPath, { replace: true });
+      } else if (role === 'ADMIN' || role === 'STAFF') {
         navigate('/dashboard/admin');
       } else {
         navigate('/dashboard/student');

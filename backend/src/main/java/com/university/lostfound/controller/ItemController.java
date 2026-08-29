@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/items")
 public class ItemController {
@@ -53,6 +55,12 @@ public class ItemController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
+    @GetMapping("/pending-approvals")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_TEACHER')")
+    public ResponseEntity<ApiResponse<List<ItemDTO>>> getPendingApprovals() {
+        return ResponseEntity.ok(ApiResponse.success(itemService.getPendingApprovals()));
+    }
+
     @PatchMapping("/{itemId}/status")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public ResponseEntity<ApiResponse<ItemDTO>> updateItemStatus(@PathVariable Long itemId,
@@ -62,7 +70,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}/verify")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_TEACHER')")
     public ResponseEntity<ApiResponse<ItemDTO>> verifyItem(@PathVariable Long itemId, Authentication authentication) {
         ItemDTO item = itemService.verifyItem(itemId, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Item verified", item));
