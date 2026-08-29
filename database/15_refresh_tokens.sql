@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Stores JWT Refresh Tokens
 -- ==========================================================
 
-DROP TABLE IF EXISTS refresh_tokens;
-
-CREATE TABLE refresh_tokens (
+CREATE TABLE IF NOT EXISTS refresh_tokens (
 
     refresh_token_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

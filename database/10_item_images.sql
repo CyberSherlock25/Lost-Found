@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Stores multiple images for every item
 -- ==========================================================
 
-DROP TABLE IF EXISTS item_images;
-
-CREATE TABLE item_images (
+CREATE TABLE IF NOT EXISTS item_images (
 
     image_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

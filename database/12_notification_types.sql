@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Master Notification Types
 -- ==========================================================
 
-DROP TABLE IF EXISTS notification_types;
-
-CREATE TABLE notification_types (
+CREATE TABLE IF NOT EXISTS notification_types (
 
     notification_type_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -24,7 +22,7 @@ CREATE TABLE notification_types (
 
 ) ENGINE=InnoDB;
 
-INSERT INTO notification_types
+INSERT IGNORE INTO notification_types
 (notification_name,description)
 VALUES
 

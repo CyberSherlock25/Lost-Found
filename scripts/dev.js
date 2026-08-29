@@ -17,7 +17,14 @@ const children = [backend, frontend];
 function stopAll(exitCode = 0) {
   if (stopping) return;
   stopping = true;
-  children.forEach((child) => { if (!child.killed) child.kill(); });
+  children.forEach((child) => {
+    if (child.killed) return;
+    if (process.platform === 'win32') {
+      spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    } else {
+      child.kill('SIGTERM');
+    }
+  });
   setTimeout(() => process.exit(exitCode), 300);
 }
 
@@ -36,4 +43,5 @@ children.forEach((child) => {
 
 process.on('SIGINT', () => stopAll());
 process.on('SIGTERM', () => stopAll());
+
 

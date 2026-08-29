@@ -73,8 +73,24 @@ public class NotificationService {
 
     @Transactional
     public void sendNotification(User sender, User receiver, Long itemId, Long claimId, String title, String message, String typeName) {
-        NotificationType type = notificationTypeRepository.findByNotificationName(typeName)
-                .orElseGet(() -> notificationTypeRepository.findAll().isEmpty() ? null : notificationTypeRepository.findAll().get(0));
+        String resolvedTypeName = typeName != null && !typeName.trim().isEmpty() ? typeName.trim() : "GENERAL";
+
+        NotificationType type = notificationTypeRepository.findByNotificationName(resolvedTypeName)
+                .orElseGet(() -> {
+                    NotificationType fallback = notificationTypeRepository.findAll().stream()
+                            .findFirst()
+                            .orElse(null);
+
+                    if (fallback != null) {
+                        return fallback;
+                    }
+
+                    NotificationType created = new NotificationType();
+                    created.setNotificationName(resolvedTypeName);
+                    created.setDescription("Auto-created system notification type");
+                    created.setIsActive(true);
+                    return notificationTypeRepository.save(created);
+                });
 
         Notification notification = new Notification();
         notification.setNotificationType(type);

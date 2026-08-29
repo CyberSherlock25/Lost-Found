@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Stores Lost and Found Items
 -- ==========================================================
 
-DROP TABLE IF EXISTS items;
-
-CREATE TABLE items (
+CREATE TABLE IF NOT EXISTS items (
 
     item_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

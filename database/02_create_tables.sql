@@ -5,20 +5,21 @@ USE lost_found_db;
 -- Stores all user roles
 -- ============================================
 
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     role_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    
+
     role_name VARCHAR(30) NOT NULL UNIQUE,
-    
+
     description VARCHAR(255),
-    
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    Get-ChildItem "C:\Program Files" -Recurse -Filter java.exe -ErrorAction SilentlyContinue    Get-ChildItem "C:\Program Files" -Recurse -Filter java.exe -ErrorAction SilentlyContinue    Get-ChildItem "C:\Program Files" -Recurse -Filter java.exe -ErrorAction SilentlyContinue    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 -- ============================================
 -- TABLE: departments
 -- ============================================
 
-CREATE TABLE departments (
+CREATE TABLE IF NOT EXISTS departments (
 
     department_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -29,7 +30,8 @@ CREATE TABLE departments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
 );
-INSERT INTO departments (department_name, description)
+
+INSERT IGNORE INTO departments (department_name, description)
 VALUES
 ('MCA', 'Master of Computer Applications'),
 ('MBA', 'Master of Business Administration'),
@@ -43,7 +45,7 @@ VALUES
 -- TABLE: users
 -- ============================================
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
 
     user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

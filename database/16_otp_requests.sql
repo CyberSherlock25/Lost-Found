@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Stores OTP requests for authentication
 -- ==========================================================
 
-DROP TABLE IF EXISTS otp_requests;
-
-CREATE TABLE otp_requests (
+CREATE TABLE IF NOT EXISTS otp_requests (
 
     otp_request_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

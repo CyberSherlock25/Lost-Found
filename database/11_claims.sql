@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Claim requests for lost/found items
 -- ==========================================================
 
-DROP TABLE IF EXISTS claims;
-
-CREATE TABLE claims (
+CREATE TABLE IF NOT EXISTS claims (
 
     claim_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

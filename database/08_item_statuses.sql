@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Workflow of every item
 -- =====================================================
 
-DROP TABLE IF EXISTS item_statuses;
-
-CREATE TABLE item_statuses (
+CREATE TABLE IF NOT EXISTS item_statuses (
 
     status_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -26,7 +24,7 @@ CREATE TABLE item_statuses (
 
 ) ENGINE=InnoDB;
 
-INSERT INTO item_statuses
+INSERT IGNORE INTO item_statuses
 (status_name,description,display_order)
 VALUES
 

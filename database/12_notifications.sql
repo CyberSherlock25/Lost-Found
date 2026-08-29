@@ -4,9 +4,7 @@ USE lost_found_db;
 -- TABLE : notifications
 -- ==========================================================
 
-DROP TABLE IF EXISTS notifications;
-
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
 
     notification_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

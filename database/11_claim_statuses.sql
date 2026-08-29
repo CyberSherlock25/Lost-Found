@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Master table for claim workflow
 -- ==========================================================
 
-DROP TABLE IF EXISTS claim_statuses;
-
-CREATE TABLE claim_statuses (
+CREATE TABLE IF NOT EXISTS claim_statuses (
 
     claim_status_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -26,7 +24,7 @@ CREATE TABLE claim_statuses (
 
 ) ENGINE=InnoDB;
 
-INSERT INTO claim_statuses
+INSERT IGNORE INTO claim_statuses
 (status_name,description,display_order)
 VALUES
 

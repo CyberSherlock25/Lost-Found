@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : University announcements visible to users
 -- ==========================================================
 
-DROP TABLE IF EXISTS announcements;
-
-CREATE TABLE announcements (
+CREATE TABLE IF NOT EXISTS announcements (
 
     announcement_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

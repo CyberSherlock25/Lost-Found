@@ -50,6 +50,7 @@ com\university\lostfound\entity\ClaimStatusMaster.class
 com\university\lostfound\repository\ItemTypeRepository.class
 com\university\lostfound\repository\LocationRepository.class
 com\university\lostfound\repository\NotificationRepository.class
+com\university\lostfound\config\MasterDataInitializer.class
 com\university\lostfound\repository\CategoryRepository.class
 com\university\lostfound\entity\ItemType.class
 com\university\lostfound\controller\ProfileController.class

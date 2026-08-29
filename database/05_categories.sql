@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Stores all item categories
 -- ==========================================================
 
-DROP TABLE IF EXISTS categories;
-
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
 
     category_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -28,7 +26,7 @@ CREATE TABLE categories (
 -- Default Categories
 -- ==========================================================
 
-INSERT INTO categories (category_name, description) VALUES
+INSERT IGNORE INTO categories (category_name, description) VALUES
 ('Electronics','Electronic gadgets'),
 ('Mobile Phones','Smartphones and Feature Phones'),
 ('Laptop','Laptops and Chargers'),

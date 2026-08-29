@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Stores user activities for auditing
 -- ==========================================================
 
-DROP TABLE IF EXISTS audit_logs;
-
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
 
     audit_log_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 

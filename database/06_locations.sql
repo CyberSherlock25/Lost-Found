@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : University locations
 -- ==========================================================
 
-DROP TABLE IF EXISTS locations;
-
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
 
     location_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -32,7 +30,7 @@ CREATE TABLE locations (
 -- Default Campus Locations
 -- ==========================================================
 
-INSERT INTO locations
+INSERT IGNORE INTO locations
 (location_name,description,building,floor_no)
 VALUES
 

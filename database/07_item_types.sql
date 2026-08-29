@@ -5,9 +5,7 @@ USE lost_found_db;
 -- Description : Lost / Found
 -- =====================================================
 
-DROP TABLE IF EXISTS item_types;
-
-CREATE TABLE item_types (
+CREATE TABLE IF NOT EXISTS item_types (
 
     type_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -24,7 +22,7 @@ CREATE TABLE item_types (
 
 ) ENGINE=InnoDB;
 
-INSERT INTO item_types(type_name,description)
+INSERT IGNORE INTO item_types(type_name,description)
 VALUES
 
 ('LOST','Item reported as lost'),
