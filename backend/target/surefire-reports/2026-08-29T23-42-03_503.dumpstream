@@ -1,5 +1,0 @@
-# Created at 2026-08-29T23:42:05.500
-Boot Manifest-JAR contains absolute paths in classpath 'E:\MIT\SEM-III\LostAndFoundPlatform\backend\target\test-classes'
-Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-'other' has different root
-
