@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.university.lostfound.service.ClaimServiceQueueTest
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.931 s -- in com.university.lostfound.service.ClaimServiceQueueTest
