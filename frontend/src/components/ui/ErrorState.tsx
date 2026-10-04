@@ -1,26 +1,26 @@
 import React from 'react';
 import {
-  PackageSearch,
+  AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
 
-interface EmptyStateProps {
+interface ErrorStateProps {
   title?: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
-  title = 'No Items Found',
-  description = 'Try adjusting your search query or filters to find what you are looking for.',
-  actionLabel,
+export const ErrorState: React.FC<ErrorStateProps> = ({
+  title = 'Something went wrong',
+  description = 'We were unable to load this information. Please try again.',
+  actionLabel = 'Try Again',
   onAction,
 }) => {
   return (
-    <div className="mx-auto my-8 w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center shadow-xl sm:p-10">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 sm:h-16 sm:w-16">
-        <PackageSearch className="h-7 w-7 sm:h-8 sm:w-8" />
+    <div className="mx-auto my-8 w-full max-w-lg rounded-2xl border border-rose-500/20 bg-slate-900/50 p-8 text-center shadow-xl sm:p-10">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400">
+        <AlertTriangle className="h-7 w-7" />
       </div>
 
       <h3 className="text-base font-bold text-slate-100 sm:text-lg">
@@ -31,7 +31,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {description}
       </p>
 
-      {actionLabel && onAction && (
+      {onAction && (
         <button
           type="button"
           onClick={onAction}
@@ -52,7 +52,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             shadow-lg
             shadow-blue-500/10
             transition
-            hover:-translate-y-0.5
             focus:outline-none
             focus:ring-2
             focus:ring-sky-400/50
