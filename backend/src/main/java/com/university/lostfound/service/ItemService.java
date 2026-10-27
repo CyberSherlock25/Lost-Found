@@ -166,6 +166,18 @@ public class ItemService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<ItemDTO> getManageableItems(String requesterEmail) {
+        User requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + requesterEmail));
+        if (!"ADMIN".equals(normalizeRoleName(requester))) {
+            throw new AccessDeniedException("Only administrators can manage all reported items.");
+        }
+        return itemRepository.findByIsActiveTrueOrderByCreatedAtDesc().stream()
+                .map(dtoMapper::toItemDTO)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Soft-delete an item to preserve claim history and foreign-key relationships.
      * Regular users can remove only their own reports; only ADMIN can remove any report.
@@ -188,8 +200,8 @@ public class ItemService {
         if (!Boolean.TRUE.equals(item.getIsActive())) {
             throw new ResourceNotFoundException("Item not found with ID: " + itemId);
         }
-        if (item.getStatus() != null && "COLLECTED".equalsIgnoreCase(item.getStatus().getStatusName())) {
-            throw new BadRequestException("A collected item cannot be deleted from the dashboard.");
+        if (!isAdmin && item.getStatus() != null && "COLLECTED".equalsIgnoreCase(item.getStatus().getStatusName())) {
+            throw new BadRequestException("A collected item cannot be deleted from the dashboard. Contact an administrator.");
         }
 
         item.setIsActive(false);
