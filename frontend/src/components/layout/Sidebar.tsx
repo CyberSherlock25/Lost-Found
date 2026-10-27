@@ -11,6 +11,7 @@ import {
   LogOut,
   Megaphone,
   PackageCheck,
+  Package,
   PlusCircle,
   Search,
   ShieldAlert,
@@ -97,6 +98,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         'TEACHER',
         'STUDENT',
       ],
+    },
+    {
+      label: 'My Reported Items',
+      path: '/my-items',
+      icon: Package,
+      roles: ['STUDENT', 'TEACHER', 'STAFF'],
+    },
+    {
+      label: 'Manage All Items',
+      path: '/admin/items',
+      icon: ShieldAlert,
+      roles: ['ADMIN'],
     },
     {
       label: 'Report Lost Item',
