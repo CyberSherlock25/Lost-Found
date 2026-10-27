@@ -2,6 +2,8 @@ package com.university.lostfound.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,14 +16,49 @@ import java.util.UUID;
 public class FileStorageService {
 
     private final Path fileStorageLocation;
+    private final Path privateProofStorageLocation;
 
-    public FileStorageService(@Value("${app.upload.dir:uploads}") String uploadDir) {
+    public FileStorageService(@Value("${app.upload.dir:uploads}") String uploadDir,
+                              @Value("${app.private-proof.dir:private-proof-uploads}") String privateProofDir) {
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.privateProofStorageLocation = Paths.get(privateProofDir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(this.fileStorageLocation);
+            Files.createDirectories(this.privateProofStorageLocation);
         } catch (Exception ex) {
             throw new RuntimeException("Could not create directory for uploaded files.", ex);
         }
+    }
+
+    /** Stores ownership evidence outside the publicly served /uploads directory. */
+    public String storePrivateProof(MultipartFile file) {
+        validateFile(file, "image/jpeg", "image/png", "application/pdf");
+        String contentType = file.getContentType();
+        String extension = "application/pdf".equalsIgnoreCase(contentType) ? ".pdf"
+                : ("image/png".equalsIgnoreCase(contentType) ? ".png" : ".jpg");
+        String fileName = UUID.randomUUID() + extension;
+        Path target = privateProofStorageLocation.resolve(fileName).normalize();
+        if (!target.startsWith(privateProofStorageLocation)) {
+            throw new RuntimeException("Invalid proof document path.");
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            Files.copy(inputStream, target, StandardCopyOption.CREATE_NEW);
+            return "private:" + fileName;
+        } catch (IOException ex) {
+            throw new RuntimeException("Could not store private proof document.", ex);
+        }
+    }
+
+    public Resource loadPrivateProof(String storageReference) {
+        if (storageReference == null || !storageReference.startsWith("private:")) {
+            throw new IllegalArgumentException("This proof document is not stored in private storage.");
+        }
+        String fileName = storageReference.substring("private:".length());
+        Path target = privateProofStorageLocation.resolve(fileName).normalize();
+        if (!target.startsWith(privateProofStorageLocation) || !Files.isRegularFile(target)) {
+            throw new IllegalArgumentException("Proof document not found.");
+        }
+        return new FileSystemResource(target);
     }
 
     public String storeFile(MultipartFile file) {
