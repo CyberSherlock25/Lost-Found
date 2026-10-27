@@ -18,7 +18,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/claims")
 public class ClaimController {
-
     private final ClaimService claimService;
 
     public ClaimController(ClaimService claimService) {
@@ -34,21 +33,20 @@ public class ClaimController {
 
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<List<ClaimDTO>>> getMyClaims(Authentication authentication) {
-        List<ClaimDTO> claims = claimService.getMyClaims(authentication.getName());
-        return ResponseEntity.ok(ApiResponse.success(claims));
+        return ResponseEntity.ok(ApiResponse.success(claimService.getMyClaims(authentication.getName())));
     }
 
+    // Claim records may contain claimant identity and proof-document references.
     @GetMapping("/item/{itemId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_TEACHER')")
     public ResponseEntity<ApiResponse<List<ClaimDTO>>> getItemClaims(@PathVariable Long itemId) {
-        List<ClaimDTO> claims = claimService.getItemClaims(itemId);
-        return ResponseEntity.ok(ApiResponse.success(claims));
+        return ResponseEntity.ok(ApiResponse.success(claimService.getItemClaims(itemId)));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_TEACHER')")
     public ResponseEntity<ApiResponse<List<ClaimDTO>>> getAllClaims() {
-        List<ClaimDTO> claims = claimService.getAllClaims();
-        return ResponseEntity.ok(ApiResponse.success(claims));
+        return ResponseEntity.ok(ApiResponse.success(claimService.getAllClaims()));
     }
 
     @PostMapping("/{claimId}/review")
@@ -70,8 +68,9 @@ public class ClaimController {
 
     @PostMapping(value = "/{claimId}/proof-document", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<ClaimDTO>> uploadProofDocument(@PathVariable Long claimId,
+                                                                     Authentication authentication,
                                                                      @RequestParam("file") MultipartFile file) {
-        ClaimDTO claim = claimService.uploadProofDocument(claimId, file);
+        ClaimDTO claim = claimService.uploadProofDocument(claimId, authentication.getName(), file);
         return ResponseEntity.ok(ApiResponse.success("Proof document uploaded successfully", claim));
     }
 }
