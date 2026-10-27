@@ -30,8 +30,9 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<ApiResponse<ItemDTO>> getItemById(@PathVariable Long itemId) {
-        ItemDTO item = itemService.getItemById(itemId);
+    public ResponseEntity<ApiResponse<ItemDTO>> getItemById(@PathVariable Long itemId,
+                                                             Authentication authentication) {
+        ItemDTO item = itemService.getItemById(itemId, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success(item));
     }
 
