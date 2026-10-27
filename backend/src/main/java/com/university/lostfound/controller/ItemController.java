@@ -30,8 +30,9 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<ApiResponse<ItemDTO>> getItemById(@PathVariable Long itemId) {
-        ItemDTO item = itemService.getItemById(itemId);
+    public ResponseEntity<ApiResponse<ItemDTO>> getItemById(@PathVariable Long itemId,
+                                                             Authentication authentication) {
+        ItemDTO item = itemService.getItemById(itemId, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success(item));
     }
 
@@ -53,6 +54,24 @@ public class ItemController {
                 query, categoryId, locationId, typeId, statusId, brand, color, page, size, sortBy, sortDir
         );
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<List<ItemDTO>>> getMyItems(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.success(itemService.getMyItems(authentication.getName())));
+    }
+
+    @GetMapping("/manage")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse<List<ItemDTO>>> getManageableItems(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.success(itemService.getManageableItems(authentication.getName())));
+    }
+
+    @DeleteMapping("/{itemId}")
+    public ResponseEntity<ApiResponse<String>> deleteItem(@PathVariable Long itemId,
+                                                           Authentication authentication) {
+        itemService.deleteItem(itemId, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Item removed from active listings"));
     }
 
     @GetMapping("/pending-approvals")
@@ -83,10 +102,15 @@ public class ItemController {
         return ResponseEntity.ok(ApiResponse.success("Claimable status updated", item));
     }
 
+    /**
+     * The service enforces ownership too, so the check cannot be bypassed by
+     * calling it outside this controller.
+     */
     @PostMapping("/{itemId}/images")
     public ResponseEntity<ApiResponse<ItemImageDTO>> uploadImage(@PathVariable Long itemId,
-                                                                 @RequestParam("file") MultipartFile file) {
-        ItemImageDTO imageDTO = itemService.uploadImage(itemId, file);
+                                                                  Authentication authentication,
+                                                                  @RequestParam("file") MultipartFile file) {
+        ItemImageDTO imageDTO = itemService.uploadImage(itemId, authentication.getName(), file);
         return ResponseEntity.ok(ApiResponse.success("Image uploaded successfully", imageDTO));
     }
 }

@@ -7,6 +7,7 @@ import {
   FileQuestion,
   Megaphone,
   PlusCircle,
+  Package,
   Search,
   Sparkles,
   UserCheck,
@@ -351,6 +352,13 @@ export const StudentDashboardPage: React.FC = () => {
             >
               <Search className="h-4 w-4 text-sky-300" />
               Search Items
+            </Link>
+            <Link
+              to="/my-items"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-xs font-bold text-slate-200 transition hover:border-sky-500/40 hover:bg-sky-500/10 hover:text-white sm:rounded-2xl sm:px-5"
+            >
+              <Package className="h-4 w-4 text-sky-300" />
+              My Reports
             </Link>
           </div>
         </div>

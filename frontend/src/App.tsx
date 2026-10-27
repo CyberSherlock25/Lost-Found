@@ -27,6 +27,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { PublicLandingPage } from './pages/PublicLandingPage';
 import { PendingApprovalsPage } from './pages/PendingApprovalsPage';
+import { MyItemsPage } from './pages/MyItemsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ export const App: React.FC = () => {
               <Route element={<AppLayout />}>
                 <Route path="/dashboard/student" element={<StudentDashboardPage />} />
                 <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
+                <Route path="/my-items" element={<MyItemsPage />} />
 
                 <Route path="/items/report-lost" element={<UploadLostReportPage />} />
                 <Route path="/items/report-found" element={<UploadFoundItemPage />} />
@@ -93,6 +95,7 @@ export const App: React.FC = () => {
 
                 {/* Admin Only Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+                  <Route path="/admin/items" element={<MyItemsPage />} />
                   <Route path="/admin/users" element={<UserManagementPage />} />
                   <Route path="/admin/master" element={<CategoryLocationManagementPage />} />
                   <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
