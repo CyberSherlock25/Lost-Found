@@ -217,13 +217,25 @@ public class ItemService {
     public ItemDTO verifyItem(Long itemId, String verifierEmail) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with ID: " + itemId));
+
         if (Boolean.TRUE.equals(item.getIsVerified())) {
             throw new BadRequestException("This item has already been verified.");
         }
+        if (!Boolean.TRUE.equals(item.getIsActive())) {
+            throw new BadRequestException("An inactive item cannot be verified.");
+        }
+
         User verifier = userRepository.findByEmail(verifierEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Verifier user not found"));
+
+        // Verification must also move a pending item into the public, claimable workflow.
+        ItemStatus openStatus = itemStatusRepository.findByStatusName("OPEN")
+                .orElseThrow(() -> new BadRequestException("OPEN item status is not configured."));
+
         item.setIsVerified(true);
         item.setVerifiedBy(verifier);
+        item.setStatus(openStatus);
+
         Item verifiedItem = itemRepository.save(item);
         notificationService.sendNotification(verifier, item.getUploadedBy(), item.getItemId(), null, "Item Verified",
                 "Your item '" + item.getTitle() + "' has been verified and is now publicly visible.", "ITEM_FOUND");
