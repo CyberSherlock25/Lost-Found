@@ -114,6 +114,9 @@ public class AnalyticsService {
 
         dto.setRecentFoundItems(
                 itemRepository.findTop6ByIsActiveTrueOrderByCreatedAtDesc().stream()
+                        .filter(item -> Boolean.TRUE.equals(item.getIsVerified()))
+                        .filter(item -> item.getStatus() == null
+                                || !"CLAIM_APPROVED".equalsIgnoreCase(item.getStatus().getStatusName()))
                         .map(dtoMapper::toItemDTO)
                         .collect(Collectors.toList())
         );
