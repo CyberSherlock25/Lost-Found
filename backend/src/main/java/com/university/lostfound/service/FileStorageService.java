@@ -41,8 +41,10 @@ public class FileStorageService {
         if (!target.startsWith(privateProofStorageLocation)) {
             throw new RuntimeException("Invalid proof document path.");
         }
-        try (InputStream inputStream = file.getInputStream()) {
-            Files.copy(inputStream, target, StandardCopyOption.CREATE_NEW);
+        try (InputStream inputStream = file.getInputStream();
+             java.io.OutputStream outputStream = Files.newOutputStream(
+                     target, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+            inputStream.transferTo(outputStream);
             return "private:" + fileName;
         } catch (IOException ex) {
             throw new RuntimeException("Could not store private proof document.", ex);
