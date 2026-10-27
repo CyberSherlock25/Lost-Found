@@ -83,10 +83,15 @@ public class ItemController {
         return ResponseEntity.ok(ApiResponse.success("Claimable status updated", item));
     }
 
+    /**
+     * The service enforces ownership too, so the check cannot be bypassed by
+     * calling it outside this controller.
+     */
     @PostMapping("/{itemId}/images")
     public ResponseEntity<ApiResponse<ItemImageDTO>> uploadImage(@PathVariable Long itemId,
-                                                                 @RequestParam("file") MultipartFile file) {
-        ItemImageDTO imageDTO = itemService.uploadImage(itemId, file);
+                                                                  Authentication authentication,
+                                                                  @RequestParam("file") MultipartFile file) {
+        ItemImageDTO imageDTO = itemService.uploadImage(itemId, authentication.getName(), file);
         return ResponseEntity.ok(ApiResponse.success("Image uploaded successfully", imageDTO));
     }
 }
