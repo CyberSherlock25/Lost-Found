@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { AdminAnalytics } from '../types';
 import { StatCard } from '../components/dashboard/StatCard';
@@ -62,6 +63,15 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* KPI Stats Grid */}
+      <div className="flex flex-wrap gap-3">
+        <Link to="/admin/items" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sky-400">
+          <Package className="h-4 w-4" /> Manage Lost & Found Items
+        </Link>
+        <Link to="/claims" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-xs font-bold text-slate-200 transition hover:border-sky-500/40 hover:text-white">
+          <FileCheck className="h-4 w-4" /> Review Claims
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Total Registered Users" value={analytics?.totalUsers || 0} icon={Users} color="indigo" />
         <StatCard title="Total Items Logged" value={analytics?.totalItems || 0} icon={Package} color="violet" />
