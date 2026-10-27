@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { Claim } from '../types';
 import { SkeletonLoader } from '../components/ui/SkeletonLoader';
 import toast from 'react-hot-toast';
-import { FileCheck, CheckCircle2, XCircle, Clock, ShieldCheck, User, Package, MessageSquare } from 'lucide-react';
+import { Clock, User, Eye, FileText, Download } from 'lucide-react';
 
 export const ClaimsManagementPage: React.FC = () => {
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -14,6 +14,7 @@ export const ClaimsManagementPage: React.FC = () => {
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [reviewerRemarks, setReviewerRemarks] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [openingProof, setOpeningProof] = useState(false);
 
   const fetchClaims = () => {
     setLoading(true);
@@ -26,6 +27,60 @@ export const ClaimsManagementPage: React.FC = () => {
   useEffect(() => {
     fetchClaims();
   }, []);
+
+  const handleViewProof = async (claim: Claim) => {
+    // Open a blank tab immediately so browser popup blockers do not block the preview.
+    const previewWindow = window.open('', '_blank');
+    if (!previewWindow) {
+      toast.error('Please allow pop-ups to preview the proof document.');
+      return;
+    }
+
+    setOpeningProof(true);
+    try {
+      const response = await api.get(`/claims/${claim.claimId}/proof-document`, {
+        responseType: 'blob',
+      });
+      const contentType = response.headers['content-type'] || 'application/octet-stream';
+      const blob = new Blob([response.data], { type: contentType });
+      const documentUrl = URL.createObjectURL(blob);
+      previewWindow.document.title = `Claim ${claim.claimId} proof document`;
+      previewWindow.location.href = documentUrl;
+      // Keep the object URL alive while the preview tab is open, then release it.
+      previewWindow.addEventListener('beforeunload', () => URL.revokeObjectURL(documentUrl), { once: true });
+    } catch (err: any) {
+      previewWindow.close();
+      toast.error(err.response?.status === 404
+        ? 'No private proof document was found. The claimant may need to upload the proof again.'
+        : (err.response?.data?.message || 'Unable to open the proof document.'));
+    } finally {
+      setOpeningProof(false);
+    }
+  };
+
+  const handleDownloadProof = async (claim: Claim) => {
+    try {
+      const response = await api.get(`/claims/${claim.claimId}/proof-document`, {
+        responseType: 'blob',
+      });
+      const contentType = response.headers['content-type'] || 'application/octet-stream';
+      const extension = contentType.includes('pdf') ? 'pdf'
+        : contentType.includes('png') ? 'png'
+        : contentType.includes('jpeg') ? 'jpg' : 'bin';
+      const url = URL.createObjectURL(new Blob([response.data], { type: contentType }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `claim-${claim.claimId}-proof.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err.response?.status === 404
+        ? 'No private proof document was found. The claimant may need to upload the proof again.'
+        : 'Unable to download the proof document.');
+    }
+  };
 
   const handleReview = async (claimStatus: 'APPROVED' | 'REJECTED') => {
     if (!selectedClaim) return;
@@ -161,6 +216,42 @@ export const ClaimsManagementPage: React.FC = () => {
             <p className="text-xs text-slate-400 mb-4">Item: <span className="text-indigo-400 font-semibold">{selectedClaim.item?.title}</span></p>
 
             <div className="space-y-4">
+              <section className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                  <FileText className="h-4 w-4 text-indigo-400" />
+                  Claimant's proof document
+                </div>
+                {selectedClaim.proofDocumentUrl ? (
+                  <>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Open the uploaded PDF or image before deciding whether to approve or reject this claim.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleViewProof(selectedClaim)}
+                        disabled={openingProof}
+                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Eye className="h-4 w-4" />
+                        {openingProof ? 'Opening proof…' : 'View Proof'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadProof(selectedClaim)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Proof
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-2 text-xs text-amber-300">
+                    No proof document is attached to this claim. Do not approve it until the claimant provides sufficient evidence.
+                  </p>
+                )}
+              </section>
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Reviewer Feedback Remarks</label>
                 <textarea
