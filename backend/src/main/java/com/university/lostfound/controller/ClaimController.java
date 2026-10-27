@@ -7,6 +7,9 @@ import com.university.lostfound.dto.ReviewClaimRequest;
 import com.university.lostfound.service.ClaimService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -64,6 +67,16 @@ public class ClaimController {
                                                                Authentication authentication) {
         ClaimDTO claim = claimService.markCollected(claimId, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Item marked as collected and claim closed", claim));
+    }
+
+    @GetMapping("/{claimId}/proof-document")
+    public ResponseEntity<Resource> downloadProofDocument(@PathVariable Long claimId,
+                                                           Authentication authentication) {
+        Resource resource = claimService.downloadProofDocument(claimId, authentication.getName());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment")
+                .body(resource);
     }
 
     @PostMapping(value = "/{claimId}/proof-document", consumes = "multipart/form-data")
