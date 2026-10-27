@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,7 +37,7 @@ public class NotificationService {
 
     public List<NotificationDTO> getUserNotifications(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return notificationRepository.findByReceiverUserIdOrderByCreatedAtDesc(user.getUserId()).stream()
                 .map(dtoMapper::toNotificationDTO)
                 .collect(Collectors.toList());
@@ -45,56 +45,66 @@ public class NotificationService {
 
     public long getUnreadCount(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return notificationRepository.countByReceiverUserIdAndIsReadFalse(user.getUserId());
     }
 
+    /**
+     * A notification may only be changed by its receiver. Returning 404 for
+     * someone else's notification avoids disclosing whether that ID exists.
+     */
     @Transactional
-    public void markAsRead(Long notificationId) {
+    public void markAsRead(Long notificationId, String userEmail) {
+        User requester = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found: " + notificationId));
-        notification.setIsRead(true);
-        notification.setReadAt(LocalDateTime.now());
-        notificationRepository.save(notification);
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+
+        if (notification.getReceiver() == null
+                || notification.getReceiver().getUserId() == null
+                || !notification.getReceiver().getUserId().equals(requester.getUserId())) {
+            throw new ResourceNotFoundException("Notification not found");
+        }
+
+        if (!Boolean.TRUE.equals(notification.getIsRead())) {
+            notification.setIsRead(true);
+            notification.setReadAt(LocalDateTime.now());
+            notificationRepository.save(notification);
+        }
     }
 
     @Transactional
     public void markAllAsRead(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         List<Notification> unread = notificationRepository.findByReceiverUserIdOrderByCreatedAtDesc(user.getUserId());
-        for (Notification n : unread) {
-            if (!Boolean.TRUE.equals(n.getIsRead())) {
-                n.setIsRead(true);
-                n.setReadAt(LocalDateTime.now());
+        for (Notification notification : unread) {
+            if (!Boolean.TRUE.equals(notification.getIsRead())) {
+                notification.setIsRead(true);
+                notification.setReadAt(LocalDateTime.now());
             }
         }
         notificationRepository.saveAll(unread);
     }
 
     @Transactional
-    public void sendNotification(User sender, User receiver, Long itemId, Long claimId, String title, String message, String typeName) {
+    public void sendNotification(User sender, User receiver, Long itemId, Long claimId,
+                                 String title, String message, String typeName) {
         if (receiver == null) {
             return;
         }
-        String resolvedTypeName = typeName != null && !typeName.trim().isEmpty() ? typeName.trim() : "GENERAL";
+
+        String resolvedTypeName = typeName != null && !typeName.trim().isEmpty()
+                ? typeName.trim() : "GENERAL";
 
         NotificationType type = notificationTypeRepository.findByNotificationName(resolvedTypeName)
-                .orElseGet(() -> {
-                    NotificationType fallback = notificationTypeRepository.findAll().stream()
-                            .findFirst()
-                            .orElse(null);
-
-                    if (fallback != null) {
-                        return fallback;
-                    }
-
+                .orElseGet(() -> notificationTypeRepository.findAll().stream().findFirst().orElseGet(() -> {
                     NotificationType created = new NotificationType();
                     created.setNotificationName(resolvedTypeName);
                     created.setDescription("Auto-created system notification type");
                     created.setIsActive(true);
                     return notificationTypeRepository.save(created);
-                });
+                }));
 
         Notification notification = new Notification();
         notification.setNotificationType(type);
@@ -105,7 +115,6 @@ public class NotificationService {
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setIsRead(false);
-
         notificationRepository.save(notification);
     }
 
