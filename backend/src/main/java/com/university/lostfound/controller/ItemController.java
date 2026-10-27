@@ -61,6 +61,12 @@ public class ItemController {
         return ResponseEntity.ok(ApiResponse.success(itemService.getMyItems(authentication.getName())));
     }
 
+    @GetMapping("/manage")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse<List<ItemDTO>>> getManageableItems(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.success(itemService.getManageableItems(authentication.getName())));
+    }
+
     @DeleteMapping("/{itemId}")
     public ResponseEntity<ApiResponse<String>> deleteItem(@PathVariable Long itemId,
                                                            Authentication authentication) {
