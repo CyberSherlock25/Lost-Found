@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS roles (
 
     description VARCHAR(255),
 
-    Get-ChildItem "C:\Program Files" -Recurse -Filter java.exe -ErrorAction SilentlyContinue    Get-ChildItem "C:\Program Files" -Recurse -Filter java.exe -ErrorAction SilentlyContinue    Get-ChildItem "C:\Program Files" -Recurse -Filter java.exe -ErrorAction SilentlyContinue    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
