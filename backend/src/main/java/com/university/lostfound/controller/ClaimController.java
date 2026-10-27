@@ -73,9 +73,18 @@ public class ClaimController {
     public ResponseEntity<Resource> downloadProofDocument(@PathVariable Long claimId,
                                                            Authentication authentication) {
         Resource resource = claimService.downloadProofDocument(claimId, authentication.getName());
+        String filename = resource.getFilename() == null ? "" : resource.getFilename().toLowerCase(java.util.Locale.ROOT);
+        MediaType mediaType = filename.endsWith(".pdf") ? MediaType.APPLICATION_PDF
+                : filename.endsWith(".png") ? MediaType.IMAGE_PNG
+                : filename.endsWith(".jpg") || filename.endsWith(".jpeg") ? MediaType.IMAGE_JPEG
+                : MediaType.APPLICATION_OCTET_STREAM;
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment")
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.inline()
+                                .filename(resource.getFilename() == null ? "proof-document" : resource.getFilename())
+                                .build().toString())
+                .header("X-Content-Type-Options", "nosniff")
                 .body(resource);
     }
 
