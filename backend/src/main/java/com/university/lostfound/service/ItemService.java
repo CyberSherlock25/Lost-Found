@@ -156,6 +156,47 @@ public class ItemService {
         return dtoMapper.toItemDTO(item);
     }
 
+    @Transactional(readOnly = true)
+    public List<ItemDTO> getMyItems(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+        return itemRepository.findByUploadedByUserIdOrderByCreatedAtDesc(user.getUserId()).stream()
+                .filter(item -> Boolean.TRUE.equals(item.getIsActive()))
+                .map(dtoMapper::toItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Soft-delete an item to preserve claim history and foreign-key relationships.
+     * Regular users can remove only their own reports; only ADMIN can remove any report.
+     */
+    @Transactional
+    public void deleteItem(Long itemId, String requesterEmail) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found with ID: " + itemId));
+        User requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + requesterEmail));
+
+        boolean isOwner = item.getUploadedBy() != null
+                && item.getUploadedBy().getUserId() != null
+                && item.getUploadedBy().getUserId().equals(requester.getUserId());
+        boolean isAdmin = "ADMIN".equals(normalizeRoleName(requester));
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("You can delete only items you reported.");
+        }
+        if (!Boolean.TRUE.equals(item.getIsActive())) {
+            throw new ResourceNotFoundException("Item not found with ID: " + itemId);
+        }
+        if (item.getStatus() != null && "COLLECTED".equalsIgnoreCase(item.getStatus().getStatusName())) {
+            throw new BadRequestException("A collected item cannot be deleted from the dashboard.");
+        }
+
+        item.setIsActive(false);
+        item.setIsClaimable(false);
+        itemRepository.save(item);
+    }
+
     public List<ItemDTO> getPendingApprovals() {
         return itemRepository.findByIsVerifiedFalseAndIsActiveTrueOrderByCreatedAtAsc()
                 .stream()
