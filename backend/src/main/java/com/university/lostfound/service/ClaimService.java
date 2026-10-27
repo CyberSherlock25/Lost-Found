@@ -10,6 +10,7 @@ import com.university.lostfound.mapper.DTOMapper;
 import com.university.lostfound.repository.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.core.io.Resource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -227,9 +228,32 @@ public class ClaimService {
             throw new BadRequestException("Proof document must be a PDF, JPEG, or PNG file.");
         }
 
-        String proofUrl = fileStorageService.storeFile(file);
+        String proofUrl = fileStorageService.storePrivateProof(file);
         claim.setProofDocumentUrl(proofUrl);
         return dtoMapper.toClaimDTO(claimRepository.save(claim));
+    }
+
+    @Transactional(readOnly = true)
+    public Resource downloadProofDocument(Long claimId, String userEmail) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim not found with ID: " + claimId));
+        User requester = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+
+        boolean isClaimant = claim.getClaimant() != null && claim.getClaimant().getUserId() != null
+                && claim.getClaimant().getUserId().equals(requester.getUserId());
+        boolean isReviewer = CLAIM_REVIEWER_ROLES.contains(normalizeRoleName(requester));
+        if (!isClaimant && !isReviewer) {
+            throw new AccessDeniedException("You are not allowed to download this proof document.");
+        }
+        if (claim.getProofDocumentUrl() == null || claim.getProofDocumentUrl().isBlank()) {
+            throw new ResourceNotFoundException("No proof document is attached to this claim.");
+        }
+        try {
+            return fileStorageService.loadPrivateProof(claim.getProofDocumentUrl());
+        } catch (IllegalArgumentException ex) {
+            throw new ResourceNotFoundException("Private proof document not found. Existing proof files may need to be re-uploaded.");
+        }
     }
 
     private String normalizeRoleName(User user) {
