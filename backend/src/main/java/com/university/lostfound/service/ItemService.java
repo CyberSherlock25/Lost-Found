@@ -128,10 +128,29 @@ public class ItemService {
         return dtoMapper.toItemDTO(savedItem);
     }
 
-    public ItemDTO getItemById(Long itemId) {
+    public ItemDTO getItemById(Long itemId, String viewerEmail) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with ID: " + itemId));
         if (!Boolean.TRUE.equals(item.getIsActive()) || !Boolean.TRUE.equals(item.getIsVerified())) {
+            throw new ResourceNotFoundException("Item not found with ID: " + itemId);
+        }
+
+        User viewer = userRepository.findByEmail(viewerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + viewerEmail));
+
+        // Once a claim is approved, only the approved claimant and trusted reviewers
+        // can open the item's detail endpoint. The record remains in the database.
+        boolean approvedAndAssigned = item.getStatus() != null
+                && "CLAIM_APPROVED".equalsIgnoreCase(item.getStatus().getStatusName());
+        boolean isAssignedClaimant = item.getClaimedBy() != null
+                && item.getClaimedBy().getUserId() != null
+                && item.getClaimedBy().getUserId().equals(viewer.getUserId());
+        String viewerRole = normalizeRoleName(viewer);
+        boolean isReviewer = "ADMIN".equals(viewerRole)
+                || "STAFF".equals(viewerRole)
+                || "TEACHER".equals(viewerRole);
+
+        if (approvedAndAssigned && !isAssignedClaimant && !isReviewer) {
             throw new ResourceNotFoundException("Item not found with ID: " + itemId);
         }
         return dtoMapper.toItemDTO(item);
@@ -177,6 +196,8 @@ public class ItemService {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(criteriaBuilder.equal(root.get("isActive"), true));
             predicates.add(criteriaBuilder.equal(root.get("isVerified"), true));
+            // Approved items are no longer available in the public student search.
+            predicates.add(criteriaBuilder.notEqual(root.get("status").get("statusName"), "CLAIM_APPROVED"));
 
             if (StringUtils.hasText(query)) {
                 String pattern = "%" + query.toLowerCase(Locale.ROOT) + "%";
