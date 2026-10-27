@@ -56,6 +56,18 @@ public class ItemController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<List<ItemDTO>>> getMyItems(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.success(itemService.getMyItems(authentication.getName())));
+    }
+
+    @DeleteMapping("/{itemId}")
+    public ResponseEntity<ApiResponse<String>> deleteItem(@PathVariable Long itemId,
+                                                           Authentication authentication) {
+        itemService.deleteItem(itemId, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Item removed from active listings"));
+    }
+
     @GetMapping("/pending-approvals")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_TEACHER')")
     public ResponseEntity<ApiResponse<List<ItemDTO>>> getPendingApprovals() {
